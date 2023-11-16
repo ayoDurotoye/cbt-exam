@@ -1,0 +1,307 @@
+<html>
+<head>
+  <title>Quiz App</title>
+  <link rel="stylesheet" type="text/css" href="styles.css">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="styles.css">
+
+</head>
+
+<style>
+    body {
+  font-family: Arial, sans-serif;
+  background-color: #f0f0f0;
+  margin: 0;
+  padding: 0;
+}
+.quiz-container {
+  background-color: #fff;
+  max-width: 500px;
+  margin: 20px auto;
+  padding: 20px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+.button-container {
+  text-align: center;
+  margin-top: 10px;
+}
+
+button {
+  padding: 10px 20px;
+  margin: 5px;
+  cursor: pointer;
+}
+
+
+button:focus {
+  outline: none;
+}
+
+#options {
+  margin-top: 10px;
+}
+
+.option {
+  margin: 5px;
+  padding: 5px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+
+.option:hover {
+  background-color: #6570a5;
+}
+
+/* .option.selected {
+      background-color: #333;
+      color: #fff;
+    } */
+
+.option input[type="radio"] {
+    margin-right: 5px;
+  }
+  .button-container {
+    text-align: center;
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between; 
+  }
+
+  .button-container button {
+    flex: 1; 
+  }
+
+    
+</style>
+<body>
+
+
+    <div class="quiz-container">
+        <div id="question"></div>
+        <form id="options"></form>
+        <div class="button-container">
+         <!-- Add Start Quiz button -->
+         <button id="start-quiz" class="btn btn-primary">Start Quiz</button>
+         <button class="btn btn-secondary mr-2" id="prev" onclick="prevQuestion()">Previous</button>
+         <button id="next" onclick="nextQuestion()">Next</button>
+         <button id="submit" onclick="submitQuiz()">Submit</button>
+        </div>
+        <div id="timer">Time: <span id="time">60</span> seconds</div>
+      </div>
+
+
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.7/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+  <script>
+
+const questions = [
+  {
+    question: 'Question 1: Which is the capital of France?',
+    options: ['a) London', 'b) Paris', 'c) Berlin', 'd) Rome'],
+    answer: 'b'
+  },
+  {
+    question: 'Question 2: Which is the best in the JS class?',
+    options: ['a) Tominsi', 'b) Anjola', 'c) GPF', 'd) Mercy'],
+    answer: 'b'
+  },
+  {
+    question: 'Question 3: Which is the capital of Nigeria?',
+    options: ['a) Abuja', 'b) Cairo', 'c) Berlin', 'd) Ankara'],
+    answer: 'a'
+  },
+  {
+    question: 'Question 4: Who is the president of Nigeria?',
+    options: ['a) Muhammudu Buhari', 'b) Atiku Abubakar', 'c) Bola Tinubu', 'd) Peter Obi'],
+    answer: 'c'
+  },
+  {
+    question: 'Question 5: Where is Ogbomoso Located in Nigeria?',
+    options: ['a) Ogun State', 'b) Osun State', 'c) Oyo State', 'd) Kogi State'],
+    answer: 'c'
+  },
+  {
+    question: 'Question 6: Where is Ogbomoso Located in Nigeria?',
+    options: ['a) Ogun State', 'b) Osun State', 'c) Oyo State', 'd) Kogi State'],
+    answer: 'c'
+  },
+  {
+    question: 'Question 7: Who is an AfroBeat Artist?',
+    options: ['a) King Sunny Ade', 'b) Bola Are', 'c) Buju(Bnxn)', 'd) Ayeloyun Kamorudeen'],
+    answer: 'c'
+  },
+  {
+    question: 'Question 8: Which state generates highiest Nigeria?',
+    options: ['a) Logos State', 'b) Ogun state', 'c) Ondo State', 'd) Abia State'],
+    answer: 'a'
+  },
+];
+
+const totalQuestions = questions.length;
+  let currentQuestionIndex = 0;
+  let unansweredQuestions = totalQuestions;
+  let timer;
+
+  let questionElement;
+  let optionsElement;
+  let prevButton;
+  let nextButton;
+  let submitButton;
+  let timerElement;
+  let startButton;
+
+  document.addEventListener('DOMContentLoaded', function () {
+    questionElement = document.getElementById('question');
+    optionsElement = document.getElementById('options');
+    prevButton = document.getElementById('prev');
+    nextButton = document.getElementById('next');
+    submitButton = document.getElementById('submit');
+    timerElement = document.getElementById('time');
+    startButton = document.getElementById('start-quiz');
+
+    startButton.addEventListener('click', startQuiz);
+  });
+
+  function startQuiz() {
+    startButton.style.display = 'none'; // Hide the Start Quiz button
+    showQuestion();
+    startTimer();
+  }
+
+  
+  function selectOption(event) {
+    const selectedOptionIndex = event.target.getAttribute('data-index');
+      if (selectedOptionIndex !== null) {
+        // Remove the 'selected' class from all options
+        const allOptions = document.getElementsByClassName('option');
+        for (let i = 0; i < allOptions.length; i++) {
+          allOptions[i].classList.remove('selected');
+        }
+
+
+      // Add the 'selected' class to the clicked option
+      event.target.classList.add('selected');
+
+      unansweredQuestions--;
+      const selectedOption = event.target.textContent.charAt(0).toLowerCase();
+      questions[currentQuestionIndex].userAnswer = selectedOption; // Store the user's answer in the question object
+    }
+  }
+
+  function initializeOptions() {
+      const currentQuestion = questions[currentQuestionIndex];
+      const allOptions = document.getElementsByClassName('option');
+
+      for (let i = 0; i < allOptions.length; i++) {
+        const optionElement = allOptions[i];
+        const index = optionElement.getAttribute('data-index');
+
+        // Check if the option is the user's selected answer for the current question
+        if (currentQuestion.userAnswer === currentQuestion.options[index].charAt(0).toLowerCase()) {
+          optionElement.classList.add('selected');
+        }
+      }
+    }
+
+
+
+
+  function showQuestion() {
+      const currentQuestion = questions[currentQuestionIndex];
+      questionElement.textContent = currentQuestion.question;
+      optionsElement.innerHTML = '';
+
+      currentQuestion.options.forEach((option, index) => {
+        const optionElement = document.createElement('div');
+        optionElement.textContent = option;
+        optionElement.classList.add('option');
+        optionElement.setAttribute('data-index', index);
+        optionElement.addEventListener('click', selectOption);
+
+        // Add an input radio element for each option
+        const inputRadio = document.createElement('input');
+        inputRadio.type = 'radio';
+        inputRadio.name = 'option';
+        inputRadio.value = index;
+        inputRadio.style.marginRight = '5px';
+
+        // Check if the option is selected
+        if (currentQuestion.userAnswer === option.charAt(0).toLowerCase()) {
+          inputRadio.checked = true;
+        }
+
+        optionElement.insertBefore(inputRadio, optionElement.firstChild);
+        optionsElement.appendChild(optionElement);
+      });
+
+      // Previous button disabled state remains unchanged
+      prevButton.disabled = currentQuestionIndex === 0;
+
+      // Next and Submit button visibility remains unchanged
+      nextButton.style.display = currentQuestionIndex === totalQuestions - 1 ? 'none' : 'block';
+      submitButton.style.display = currentQuestionIndex === totalQuestions - 1 ? 'block' : 'none';
+
+
+      initializeOptions();
+    }
+  
+
+
+  function nextQuestion() {
+      currentQuestionIndex++;
+      showQuestion();
+    }
+
+    function prevQuestion() {
+      currentQuestionIndex--;
+      showQuestion();
+    }
+
+    function submitQuiz() {
+      clearInterval(timer);
+
+      let unansweredCount = 0;
+      questions.forEach((question) => {
+        if (!question.userAnswer) {
+          unansweredCount++;
+        }
+      });
+
+      if (unansweredCount > 0) {
+        alert(`You have ${unansweredCount} unanswered question(s).`);
+      } else {
+        let score = 0;
+        questions.forEach((question) => {
+          if (question.userAnswer === question.answer) {
+            score++;
+          }
+        });
+
+        alert(`Your score: ${score}/${totalQuestions}`);
+      }
+    }
+
+    function startTimer() {
+      let timeRemaining = 60;
+      timerElement.textContent = timeRemaining;
+
+      timer = setInterval(() => {
+        timeRemaining--;
+        timerElement.textContent = timeRemaining;
+        if (timeRemaining <= 0) {
+          clearInterval(timer);
+          submitQuiz();
+        }
+      }, 1000);
+    }
+
+    showQuestion();
+    startTimer();
+
+  </script>
+</body>
+</html>
